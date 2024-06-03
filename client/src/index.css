@@ -114,3 +114,10 @@
     flex-direction: column;
     justify-content: center;
 }
+
+
+/* product list */
+.product-link{
+  text-decoration: none !important;
+  color: #000000 !important;
+}
