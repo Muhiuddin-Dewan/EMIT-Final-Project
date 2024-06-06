@@ -1,19 +1,24 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Layout from "../components/Layouts/Layout";
 import { useCart } from "../context/Cart";
 import { useAuth } from "../context/auth";
 import { useNavigate } from "react-router-dom";
+import DropIn from "braintree-web-drop-in-react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const CartPage = () => {
   const [cart, setCart] = useCart();
   const [auth, setAuth] = useAuth();
   const navigate = useNavigate();
+  const [instance, setInstance] = useState(null);
+  const [clientToken, setClientToken] = useState("");
 
   // total price
   const totalPrice = () => {
     try {
       let total = 0;
-      cart?.map((item) => {
+      cart?.forEach((item) => {
         total = total + item.price;
       });
       return total.toLocaleString("en-BD", {
@@ -37,6 +42,43 @@ const CartPage = () => {
       console.log(error);
     }
   };
+
+  // get payment gateway token
+  const getToken = async () => {
+    try {
+      const { data } = await axios.get(
+        `${process.env.REACT_APP_API}/api/v1/product/braintree/token`
+      );
+      setClientToken(data?.clientToken);
+    } catch (error) {
+      console.log("Error fetching client token:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (auth?.token) {
+      getToken();
+    }
+  }, [auth?.token]);
+
+  // handle payment
+  const handlePayment = async () => {
+    try {
+      const { nonce } = await instance.requestPaymentMethod();
+      const { data } = await axios.post(
+        `${process.env.REACT_APP_API}/api/v1/product/braintree/payment`,
+        { nonce, cart }
+      );
+      console.log(data);
+      localStorage.removeItem("cart");
+      setCart([]);
+      navigate("/dashboard/user/orders");
+      toast.success("Payment Completed Successfully");
+    } catch (error) {
+      console.log("Payment error:", error);
+    }
+  };
+
   return (
     <Layout>
       <div className="container">
@@ -57,7 +99,7 @@ const CartPage = () => {
         <div className="row">
           <div className="col-md-8">
             {cart?.map((p) => (
-              <div className="row card flex-row mb-2 p-3">
+              <div key={p._id} className="row card flex-row mb-2 p-3">
                 <div className="col-md-4">
                   <img
                     src={`${process.env.REACT_APP_API}/api/v1/product/product-photo/${p._id}`}
@@ -121,6 +163,21 @@ const CartPage = () => {
                 )}
               </div>
             )}
+            <div className="mt-2">
+              {clientToken && (
+                <DropIn
+                  options={{
+                    authorization: clientToken,
+                  }}
+                  onInstance={(instance) => setInstance(instance)}
+                />
+              )}
+              {clientToken && (
+                <button className="btn btn-primary" onClick={handlePayment}>
+                  Make Payment
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
