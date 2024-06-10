@@ -1,2 +1,2 @@
 # EMIT-Final-Project
-# Frontend Code is in Client Directory
+# Frontend Code is in /Client Directory
