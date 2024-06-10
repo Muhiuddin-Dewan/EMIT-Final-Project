@@ -21,7 +21,7 @@ services:
     environment:
       - MONGO_URL=mongodb://mongo:27017/ecommerce
       - JWT_SECRET=mysupersecret
-      - PORT=8080
+      - PORT=8081
     depends_on:
       - mongo
 
