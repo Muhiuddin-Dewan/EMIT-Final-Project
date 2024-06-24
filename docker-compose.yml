@@ -10,7 +10,7 @@ services:
     depends_on:
       - backend
     environment:
-      - REACT_APP_API=http://192.168.1.202:8081
+      - REACT_APP_API=http://43.204.64.55:8081
 
   backend:
     build:
